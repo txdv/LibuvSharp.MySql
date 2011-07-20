@@ -29,11 +29,11 @@ namespace Manos.MySql.Test
 		
 		public static void Query(Context context, string database, string table)
 		{
-			MySqlConnection conn = new MySqlConnection(context.CreateSocket());
+			MySqlClient client = new MySqlClient(context.CreateSocket());
 			
-			conn.Connect(host, port, user, password, delegate (Exception e) {
-				conn.Query(string.Format("use {0}", database), (response) => {
-					conn.Query(string.Format("SELECT * FROM {0}", table))
+			client.Connect(host, port, user, password, delegate (Exception e) {
+				client.Query(string.Format("use {0}", database), (response) => {
+					client.Query(string.Format("SELECT * FROM {0}", table))
 					.On(row: delegate (Row data) {
 						for (int i = 0; i < data.Length; i++) {
 							Console.Write(data.GetRawValue(i));
@@ -41,7 +41,7 @@ namespace Manos.MySql.Test
 						}
 						Console.WriteLine();
 					}).On(end: delegate {
-						conn.Close();
+						client.Close();
 					});
 				});
 			});

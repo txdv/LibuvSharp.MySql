@@ -32,7 +32,7 @@ namespace Manos.MySql
 		public Action<ResponsePacket> Callback { get; set; }
 	}
 	
-	public class MySqlConnection
+	public class MySqlClient
 	{
 		enum ConnectionState {
 			WaitForServerGreet,
@@ -87,7 +87,7 @@ namespace Manos.MySql
 		
 		QueryCommand QueryCommand { get; set; }
 		
-		public MySqlConnection(Socket socket)
+		public MySqlClient(Socket socket)
 		{
 			Socket = socket;
 			Encoding = Encoding.ASCII;
