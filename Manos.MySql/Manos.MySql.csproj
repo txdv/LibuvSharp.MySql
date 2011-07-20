@@ -50,6 +50,7 @@
     <Compile Include="Packets\PacketBuilder.cs" />
     <Compile Include="QueryCommand.cs" />
     <Compile Include="Row.cs" />
+    <Compile Include="MySqlClient.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

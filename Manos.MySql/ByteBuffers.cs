@@ -14,6 +14,13 @@ namespace Manos.MySql
 		{
 		}
 		
+		public void AddCopy(ByteBuffer buffer)
+		{
+			byte[] bytes = new byte[buffer.Length];
+			Buffer.BlockCopy(buffer.Bytes, buffer.Position, bytes, 0, bytes.Length);
+			Add(new ByteBuffer(bytes, 0, bytes.Length));
+		}
+		
 		public void Add(ByteBuffer buffer)
 		{
 			buffers.Add(buffer);

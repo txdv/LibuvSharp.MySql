@@ -19,7 +19,7 @@ namespace Manos.MySql
 		public bool EndOfData
 		{
 			get {
-				return (ms.Position == data.Length);
+				return (ms.Position >= data.Length);
 			}
 		}
 		
@@ -38,9 +38,9 @@ namespace Manos.MySql
 		
 		public int GetRestLength()
 		{
-			int pos = (int)ms.Position;
+			int pos = Position;
 			int start = pos;
-			while (data[pos] != 0 && pos < data.Length) {
+			while (pos < data.Length && data[pos] != 0) {
 				pos++;
 			}
 			

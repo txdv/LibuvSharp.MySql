@@ -28,46 +28,18 @@ namespace Manos.MySql
 	
 	class CommandInfo
 	{
-		public byte[] SerializedCommand { get; set; }
-		public Action<ResponsePacket> Callback { get; set; }
+		public byte[] Packet { get; set; }
+		public QueryCommand Callback { get; set; }
 	}
 	
-	public class MySqlClient
+	public class MySqlConnection
 	{
-		enum ConnectionState {
-			WaitForServerGreet,
-			WaitForLoginResponse,
-			WaitForResponse,
-			Unknown
-		}
+		Socket Socket { get; set; }
+		Stream Stream { get; set; }
 		
-		Queue<CommandInfo> commands = new Queue<CommandInfo>();
-		
-		ByteBuffers buffers = new ByteBuffers();
+		ByteBuffers buffers;
 		PacketBuilder packetBuilder = new PacketBuilder();
 		PacketReader packetReader = new PacketReader();
-		
-		string User { get; set; }
-		string Password { get; set; }
-		
-		IEnumerator<bool> ResponseHandler { get; set; }
-		
-		public bool HandleResponse()
-		{
-			if (ResponseHandler != null) {
-				ResponseHandler.MoveNext();
-				if (ResponseHandler.Current) {
-					ResponseHandler = null;
-					commands.Dequeue().Callback(null);
-					State = ConnectionState.Unknown;
-					return true;
-				}
-			}
-			return false;
-		}
-		
-		public Socket Socket { get; private set; }
-		public Stream Stream { get; private set; }
 		
 		Encoding encoding;
 		public Encoding Encoding {
@@ -81,83 +53,87 @@ namespace Manos.MySql
 			}
 		}
 		
-		ConnectionState State { get; set; }
+		IEnumerator<bool> Worker { get; set; }
 		
-		Action<Exception> ConnectionCallBack { get; set; }
-		
-		QueryCommand QueryCommand { get; set; }
-		
-		public MySqlClient(Socket socket)
+		bool HandleWorker()
 		{
-			Socket = socket;
-			Encoding = Encoding.ASCII;
-		}
-		
-		public void Connect(string host, int port, string user, string password, Action<Exception> callback)
-		{
-			User = user;
-			Password = password;
-			
-			ConnectionCallBack = callback;
-			
-			Socket.Connect(host, port, delegate {
-				Stream = Socket.GetSocketStream();
-				Stream.Read(delegate (ByteBuffer buffer) {
-					byte[] data = new byte[buffer.Length];
-					Buffer.BlockCopy(buffer.Bytes, buffer.Position, data, 0, data.Length);
-					
-					buffers.Add(new ByteBuffer(data, buffer.Position, buffer.Length));
-					
-					if (HandleResponse()) {
-						return;
-					}
-					byte[] packet;
-					byte packetNumber;
-					if (ReadPacket(out packetNumber, out packet)) {
-						Process(packetNumber, packet);
-					}
-				}, delegate (Exception exception) {
-					
-				}, delegate {
-					
-				});
-			});
-			
-		}
-		
-		public QueryCommand Query(string queryString, Action<ResponsePacket> callback)
-		{
-			State = ConnectionState.WaitForResponse;
-			Execute(DatabaseCommand.QUERY, queryString, callback);
-			return null;
-		}
-		
-		public QueryCommand Query(string queryString)
-		{
-			State = ConnectionState.WaitForResponse;
-			Execute(DatabaseCommand.QUERY, queryString, (res) => { });
-			QueryCommand = new QueryCommand();
-			return QueryCommand;
-		}
-		
-		void Execute(DatabaseCommand cmd, string commandString, Action<ResponsePacket> callback)
-		{
-			packetBuilder.NewPacket();
-			packetBuilder.WriteByte((byte)cmd);
-			packetBuilder.WriteStringNoNull(commandString);
-			
-			commands.Enqueue(new CommandInfo() {
-				SerializedCommand = packetBuilder.Serialize(0),
-				Callback = callback
-			});
-			
-			if (commands.Count == 1) {
-				Stream.Write(commands.Peek().SerializedCommand);
+			if (Worker != null) {
+				Worker.MoveNext();
+				if (Worker.Current) {
+					Worker = null;
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return true;
 			}
 		}
 		
-		IEnumerable<bool> WorkRequest(PacketReader packetReader)
+		Queue<CommandInfo> commands = new Queue<CommandInfo>();
+		
+		void FireNextCommand()
 		{
+			commands.Dequeue();
+			if (commands.Count > 0) {
+				Stream.Write(commands.Peek().Packet);
+			}
+		}
+		
+		bool FireFirstCommand(CommandInfo info)
+		{
+			commands.Enqueue(info);
+			
+			if (commands.Count == 1) {
+				Stream.Write(info.Packet);
+				return true;
+			}
+			return false;
+		}
+		
+		public MySqlConnection(Socket socket, ByteBuffers buffers)
+		{
+			Socket = socket;
+			Stream = socket.GetSocketStream();
+			this.buffers = buffers;
+			
+			Encoding = Encoding.Default;
+			
+			Stream.Read(delegate (ByteBuffer data) {
+				buffers.AddCopy(data);
+				
+				if (!HandleWorker()) {
+					return;
+				}
+				byte[] packet;
+				byte packetNumber;
+				if (ReadPacket(out packetNumber, out packet)) {
+					Worker = ProcessRequest(packetNumber, packet).GetEnumerator();
+					Worker.MoveNext();
+				}
+			}, delegate (Exception exception) {
+			}, delegate {
+			});
+			
+		}
+		
+		IEnumerable<bool> ProcessRequest(byte packetNumber, byte[] packet)
+		{
+			var queryCommand = commands.Peek().Callback;
+			
+			packetReader.NewPacket(packet);
+			
+			var type = ResponsePacket.GetType(packet);
+	
+			if (type != ResponsePacketType.Other) {
+				var responsePacket = ResponsePacket.Parse(packetReader);
+			
+				queryCommand.FireResponse(responsePacket);
+				FireNextCommand();
+				yield return true;
+				yield break;
+			}
+			
 			long length = packetReader.ReadLength();
 			
 			byte[] data;
@@ -191,7 +167,8 @@ namespace Manos.MySql
 				}
 				
 				if (ResponsePacket.GetType(data) == ResponsePacketType.EOF) {
-					QueryCommand.FireEnd();
+					queryCommand.FireEnd();
+					FireNextCommand();
 					yield return true;
 					yield break;
 				}
@@ -203,65 +180,24 @@ namespace Manos.MySql
 					values[i] = packetReader.ReadLengthString();
 				}
 				
-				QueryCommand.FireRow(new Row(f, values));
+				queryCommand.FireRow(new Row(f, values));
 			}
 		}
 		
-		public void Process(byte packetNumber, byte[] packet)
+		public QueryCommand Query(string queryString)
 		{
-			packetReader.NewPacket(packet);
+			packetBuilder.NewPacket();
+			packetBuilder.WriteByte((byte)DatabaseCommand.QUERY);
+			packetBuilder.WriteStringNoNull(queryString);
 			
-			switch (State) {
-			case ConnectionState.WaitForServerGreet:
-				var connPacket = MySqlConnectionPacket.Parse(packetReader);
-				
-				bool version = connPacket.ServerVersion.IsAtLeast(4, 1, 1);
-				
-				if (!version) {
-					
-				}
-				
-				var response = new ClientAuthResponse() {
-					ClientFlags = 0xA685,
-					MaxPacketSize = 256*256,
-					CharsetNumber = connPacket.ServerLanguage,
-					User = User,
-				};
-				
-				packetBuilder.NewPacket();
-				Stream.Write(response.Serialize(packetBuilder));
-				State = ConnectionState.WaitForLoginResponse;
-				break;
-			case ConnectionState.WaitForLoginResponse:
-				var res = ResponsePacket.Parse(packetReader);
-				
-				if (res is OkPacket) {
-					State = ConnectionState.Unknown;
-					ConnectionCallBack(null);
-				} else if (res is Error) {
-					throw new Exception((res as Error).Message);
-				}
-				break;
-			case ConnectionState.WaitForResponse:
-				
-				var type = ResponsePacket.GetType(packet);
-				
-				if (type != ResponsePacketType.Other) {
-					var responsePacket = ResponsePacket.Parse(packetReader);
-					commands.Dequeue().Callback(responsePacket);
-					return;
-				}
-				
-				ResponseHandler = WorkRequest(packetReader).GetEnumerator();
-				
-				HandleResponse();
-				
-				break;
-			case ConnectionState.Unknown:
-				throw new Exception("Got into the Uknown connection state");
-			default:
-				break;
-			}
+			var info = new CommandInfo() {
+				Callback = new QueryCommand(),
+				Packet = packetBuilder.Serialize(0) 
+			};
+			
+			FireFirstCommand(info);
+			
+			return info.Callback;
 		}
 		
 		bool ReadPacket(out byte packetNumber, out byte[] packet)
@@ -281,15 +217,6 @@ namespace Manos.MySql
 			packetNumber = 0;
 			packet = null;
 			return false;
-		}
-		
-		public void Close()
-		{
-			Execute(DatabaseCommand.QUIT, string.Empty, delegate (ResponsePacket packet) {
-				if (packet is OkPacket) {
-					Stream.Close();
-				}
-			});
 		}
 	}
 }
