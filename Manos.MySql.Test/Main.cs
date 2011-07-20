@@ -29,33 +29,30 @@ namespace Manos.MySql.Test
 			Password = ""
 		};
 		
-		public static void Query(Context context, string database, string table)
+		public static void Query(MySqlConnection conn, string database, string table)
 		{
-			MySqlClient client = new MySqlClient(context);
-			
-			client.Connect(info, delegate (Exception exception, MySqlConnection conn) {
-				
-				conn.Query(string.Format("use {0}", database)).On(response: (packet) => {
-					conn.Query(string.Format("SELECT * FROM {0}", table))
-					.On(row: delegate (Row data) {
-						for (int i = 0; i < data.Length; i++) {
-							Console.Write(data.GetRawValue(i));
-							Console.Write("\t");
-						}
-						Console.WriteLine();
-					}).On(end: delegate {
-					});
-				});
-				
+			conn.Query(string.Format("SELECT * FROM {0}", table))
+			.On(row: delegate (Row data) {
+				for (int i = 0; i < data.Length; i++) {
+					Console.Write(data.GetRawValue(i));
+					Console.Write("\t");
+				}
+				Console.WriteLine();
+			}).On(end: delegate {
+				Console.WriteLine("End of data");
 			});
 		}
-		
 		
 		public static void Main(string[] args)
 		{
 			var context = Context.Create();
+			MySqlClient client = new MySqlClient(context);
 			
-			Query(context, args[0], args[1]);
+			client.Connect(info, delegate (Exception exception, MySqlConnection conn) {
+				conn.Query(string.Format("use {0}", args[0]));
+				Query(conn, args[0], args[1]);
+				Console.WriteLine("Start of data");
+			});
 			
 			context.Start();
 		}
