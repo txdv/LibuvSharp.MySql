@@ -8,8 +8,6 @@ using System.Linq;
 using Manos.IO;
 using Manos.MySql;
 
-using Epoch.Extensions;
-
 namespace Manos.MySql.Test
 {
 	public static class MysqlExtensions
