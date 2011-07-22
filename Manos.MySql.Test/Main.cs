@@ -1,9 +1,4 @@
 using System;
-using System.Text;
-using System.Collections.Generic;
-using System.Reflection;
-//using System.Security.Cryptography;
-using System.Linq;
 
 using Manos.IO;
 using Manos.MySql;
@@ -23,8 +18,7 @@ namespace Manos.MySql.Test
 	class MainClass
 	{
 		static MySqlConnectionInfo info = new MySqlConnectionInfo() {
-			Host     = "127.0.0.1",
-			Port     = 3306,
+			IPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3306),
 			User     = "bentkus",
 			Password = ""
 		};

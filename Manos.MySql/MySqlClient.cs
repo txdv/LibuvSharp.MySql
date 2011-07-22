@@ -7,12 +7,12 @@ namespace Manos.MySql
 {
 	public class MySqlConnectionInfo
 	{
-		public string User     { get; set; }
-		public string Password { get; set; }
-		public string Host     { get; set; }
-		public int    Port     { get; set; }
-		public string Database { get; set; }
-		public Encoding Encoding { get; set; }
+		public string     User      { get; set; }
+		public string     Password  { get; set; }
+		public IPEndPoint IPEndPoint { get; set; }
+		public int        Port      { get; set; }
+		public string     Database  { get; set; }
+		public Encoding   Encoding  { get; set; }
 	}
 	
 	public class MySqlClient
@@ -26,7 +26,7 @@ namespace Manos.MySql
 		
 		public void Connect(MySqlConnectionInfo info, Action<Exception, MySqlConnection> callback)
 		{
-			new MySqlConnector(Context.CreateSocket(), info, callback);
+			new MySqlConnector(Context.CreateTcpSocket(info.IPEndPoint.AddressFamily), info, callback);
 		}
 	}
 	
@@ -38,8 +38,8 @@ namespace Manos.MySql
 		}
 		
 		MySqlConnectionInfo Info { get; set; }		 
-		Socket Socket { get; set; }
-		Stream Stream { get; set; }
+		ITcpSocket Socket { get; set; }
+		IByteStream Stream { get; set; }
 		
 		ConnectionState State { get; set; }
 		ByteBuffers buffers = new ByteBuffers();
@@ -48,7 +48,7 @@ namespace Manos.MySql
 		Action<Exception, MySqlConnection> ConnectionCallBack { get; set; }
 
 		
-		public MySqlConnector(Socket socket, MySqlConnectionInfo info, Action<Exception, MySqlConnection> callback)
+		public MySqlConnector(ITcpSocket socket, MySqlConnectionInfo info, Action<Exception, MySqlConnection> callback)
 		{
 			Socket = socket;
 			Info = info;
@@ -60,7 +60,7 @@ namespace Manos.MySql
 			// initialize state of connection
 			State = ConnectionState.WaitForServerGreet;
 			
-			Socket.Connect(info.Host, info.Port, delegate {
+			Socket.Connect(info.IPEndPoint, delegate {
 				Stream = socket.GetSocketStream();
 				
 				Stream.Read(delegate (ByteBuffer data) {
@@ -75,6 +75,8 @@ namespace Manos.MySql
 				}, delegate {
 					ConnectionCallBack(new Exception("Destination closed during connection"), null);
 				});
+			}, delegate (Exception exception) {
+				ConnectionCallBack(exception, null);
 			});
 		}
 		

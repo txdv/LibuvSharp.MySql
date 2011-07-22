@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Dynamic;
+
 using Manos.IO;
 
 namespace Manos.MySql
@@ -34,8 +35,8 @@ namespace Manos.MySql
 	
 	public class MySqlConnection
 	{
-		Socket Socket { get; set; }
-		Stream Stream { get; set; }
+		ITcpSocket Socket { get; set; }
+		IByteStream Stream { get; set; }
 		
 		ByteBuffers buffers;
 		PacketBuilder packetBuilder = new PacketBuilder();
@@ -91,7 +92,7 @@ namespace Manos.MySql
 			return false;
 		}
 		
-		public MySqlConnection(Socket socket, ByteBuffers buffers)
+		public MySqlConnection(ITcpSocket socket, ByteBuffers buffers)
 		{
 			Socket = socket;
 			Stream = socket.GetSocketStream();
@@ -220,3 +221,4 @@ namespace Manos.MySql
 		}
 	}
 }
+
