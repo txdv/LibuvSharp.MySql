@@ -68,7 +68,7 @@ namespace Manos.MySql
 			}
 		}
 
-		public Action<Exception> ConnectionCallBack { get; set; }
+		private ConnectionCommand ConnectionCommand { get; set; }
 
 		public IPAddress IPAddress {
 			get {
@@ -97,8 +97,10 @@ namespace Manos.MySql
 
 		}
 
-		public void Connect()
+		public ConnectionCommand Connect()
 		{
+			ConnectionCommand = new ConnectionCommand();
+
 			State = ConnectionState.WaitForServerGreet;
 			Socket = Context.CreateTcpSocket(IPAddress.AddressFamily);
 			Socket.Connect(IPEndPoint, delegate {
@@ -131,6 +133,8 @@ namespace Manos.MySql
 			}, delegate (Exception exception) {
 
 			});
+
+			return ConnectionCommand;
 		}
 
 		public void Disconnect()
@@ -167,13 +171,11 @@ namespace Manos.MySql
 			case ConnectionState.WaitForLoginResponse:
 				var res = ResponsePacket.Parse(packetReader);
 				if (res is OkPacket) {
-					if (ConnectionCallBack != null) {
-						ConnectionCallBack(null);
-					}
+					ConnectionCommand.FireSuccess(res as OkPacket);
 					State = ConnectionState.ParsePackets;
 					FireFirstCommand();
 				} else if (res is Error) {
-					ConnectionCallBack(new Exception((res as Error).Message));
+					ConnectionCommand.FireError(res as Error);
 				}
 				break;
 			}

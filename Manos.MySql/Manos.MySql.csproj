@@ -47,12 +47,14 @@
     <Compile Include="Packets\Packets.cs" />
     <Compile Include="Packets\PacketReader.cs" />
     <Compile Include="Packets\PacketBuilder.cs" />
-    <Compile Include="QueryCommand.cs" />
     <Compile Include="Row.cs" />
     <Compile Include="MySqlClient.cs" />
+    <Compile Include="Commands\ConnectionCommand.cs" />
+    <Compile Include="Commands\QueryCommand.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Folder Include="Packets\" />
+    <Folder Include="Commands\" />
   </ItemGroup>
 </Project>
