@@ -122,6 +122,7 @@ namespace Manos.MySql
 					return DateTime.Parse(val);
 				case MySqlDbType.String:
 				case MySqlDbType.VarChar:
+				case MySqlDbType.Blob:
 					return val;
 				default:
 					throw new Exception(string.Format("Not supported type {0}:{1}", field.Type, val));
