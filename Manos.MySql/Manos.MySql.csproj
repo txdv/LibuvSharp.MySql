@@ -43,7 +43,6 @@
     <Compile Include="Definitions.cs" />
     <Compile Include="DatabaseVersion.cs" />
     <Compile Include="Packets\Response.cs" />
-    <Compile Include="MySqlConnection.cs" />
     <Compile Include="ByteBuffers.cs" />
     <Compile Include="Packets\Packets.cs" />
     <Compile Include="Packets\PacketReader.cs" />

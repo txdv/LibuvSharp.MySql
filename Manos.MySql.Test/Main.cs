@@ -17,15 +17,9 @@ namespace Manos.MySql.Test
 	
 	class MainClass
 	{
-		static MySqlConnectionInfo info = new MySqlConnectionInfo() {
-			IPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3306),
-			User     = "bentkus",
-			Password = ""
-		};
-		
-		public static void Query(MySqlConnection conn, string database, string table)
+		public static void Query(MySqlClient client, string database, string table)
 		{
-			conn.Query(string.Format("SELECT * FROM {0}", table))
+			client.Query(string.Format("SELECT * FROM {0}", table))
 			.On(row: delegate (Row data) {
 				for (int i = 0; i < data.Length; i++) {
 					Console.Write(data.GetRawValue(i));
@@ -42,12 +36,15 @@ namespace Manos.MySql.Test
 			var context = Context.Create();
 			MySqlClient client = new MySqlClient(context);
 			
-			client.Connect(info, delegate (Exception exception, MySqlConnection conn) {
-				conn.Query(string.Format("use {0}", args[0]));
-				Query(conn, args[0], args[1]);
-				Console.WriteLine("Start of data");
-			});
-			
+			client.IPEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3306);
+			client.Username = "bentkus";
+			client.Password = "";
+
+			client.Connect();
+
+			client.Query(string.Format("use {0}", args[0]));
+			Query(client, args[0], args[1]);
+
 			context.Start();
 		}
 	}
