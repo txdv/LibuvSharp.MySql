@@ -8,9 +8,9 @@ namespace Manos.MySql
 	{
 		Fields Fields { get; set; }
 		string[] Values { get; set; }
-		
+
 		public int Length { get; private set; }
-		
+
 		internal Row(Fields fields, string[] values)
 		{
 			Fields = fields;
@@ -18,7 +18,7 @@ namespace Manos.MySql
 			
 			Length = Fields.FieldPackets.Length;
 		}
-		
+
 		public int GetIndex(string name)
 		{
 			int index;
@@ -28,7 +28,7 @@ namespace Manos.MySql
 				return -1;
 			}
 		}
-		
+
 		public string GetRawValue(int index)
 		{
 			if (index < 0 || index > Values.Length) {
@@ -36,7 +36,7 @@ namespace Manos.MySql
 			}
 			return Values[index];
 		}
-		
+
 		public object GetValue(int index)
 		{
 			if (index < 0 || index > Values.Length) {
@@ -44,7 +44,7 @@ namespace Manos.MySql
 			}
 			return Convert(Fields.FieldPackets[index], Values[index]);
 		}
-		
+
 		public string GetRawValue(string fieldName)
 		{
 			int index = GetIndex(fieldName);
@@ -53,7 +53,7 @@ namespace Manos.MySql
 			}
 			return Values[index];
 		}
-		
+
 		public object GetValue(string fieldName)
 		{
 			int index = GetIndex(fieldName);
@@ -62,31 +62,31 @@ namespace Manos.MySql
 			}
 			return Convert(Fields.FieldPackets[index], Values[index]);
 		}
-		
+
 		public object this[string fieldName] {
 			get {
 				return GetValue(fieldName);
 			}
 		}
-		
+
 		public object this[int index] {
 			get {
 				return GetValue(index);
 			}
 		}
-		
+
 		public override bool TryGetMember(GetMemberBinder binder, out object result)
 		{
 			result = this[binder.Name];
 			return true;
 		}
-		
+
 		object Convert(FieldPacket field, string val)
 		{
 			if (val == null) {
 				return null;
 			}
-			
+
 			if ((field.Flags & ColumnFlags.UNSIGNED) > 0) {
 				switch (field.Type) {
 				case MySqlDbType.Int16:
@@ -127,7 +127,6 @@ namespace Manos.MySql
 					throw new Exception(string.Format("Not supported type {0}:{1}", field.Type, val));
 				}
 			}
-			
 		}
 	}
 }
