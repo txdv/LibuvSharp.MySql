@@ -7,9 +7,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{010F89EA-CBC9-4E8A-8C4C-0802F034E67F}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Manos.MySql.Test</RootNamespace>
-    <AssemblyName>Manos.MySql.Test</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <RootNamespace>LibuvSharp.MySql.Test</RootNamespace>
+    <AssemblyName>LibuvSharp.MySql.Test</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -34,18 +33,17 @@
     <Compile Include="AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Manos.MySql\Manos.MySql.csproj">
+    <ProjectReference Include="..\LibuvSharp.MySql\LibuvSharp.MySql.csproj">
       <Project>{2822BBF7-8D7E-4A2B-9487-A53CA80A44DA}</Project>
-      <Name>Manos.MySql</Name>
+      <Name>LibuvSharp.MySql</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Manos.IO, Version=0.1.3.0, Culture=neutral, PublicKeyToken=null">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\libs\Manos.IO.dll</HintPath>
+    <Reference Include="LibuvSharp">
+      <HintPath>..\LibuvSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

@@ -1,10 +1,10 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
+using System.Net;
+using LibuvSharp;
 
-using Manos.IO;
-
-namespace Manos.MySql
+namespace LibuvSharp.MySql
 {
 	class Fields
 	{
@@ -40,21 +40,20 @@ namespace Manos.MySql
 			ParsePackets
 		}
 
-		public Context Context { get; private set; }
+		ByteBuffers buffers = new ByteBuffers();
+		Tcp Socket { get; set; }
+		public Loop Loop { get; private set; }
 
-		private ITcpSocket Socket { get; set; }
-		private IByteStream Stream { get; set; }
 		private ConnectionState State { get; set; }
 
-		private ByteBuffers buffers = new ByteBuffers();
 		private PacketReader packetReader = new PacketReader();
 		private PacketBuilder packetBuilder = new PacketBuilder();
 
 		public string     Username   { get; set; }
 		public string     Password   { get; set; }
-		public IPEndPoint IPEndPoint { get; set; }
 		public string     Database   { get; set; }
 		public string     Table      { get; set; }
+		public System.Net.IPEndPoint IPEndPoint { get; set; }
 
 		Encoding encoding;
 		public Encoding Encoding {
@@ -82,14 +81,14 @@ namespace Manos.MySql
 			}
 		}
 
-		public MySqlClient(Context context)
+		public MySqlClient(Loop loop)
 		{
-			Context = context;
+			Loop = loop;
 			Encoding = Encoding.Default;
 		}
 
-		public MySqlClient(Context context, IPEndPoint endpoint, string username, string password)
-			: this(context)
+		public MySqlClient(Loop loop, IPEndPoint endpoint, string username, string password)
+			: this(loop)
 		{
 			IPEndPoint = endpoint;
 			Username = username;
@@ -102,14 +101,13 @@ namespace Manos.MySql
 			ConnectionCommand = new ConnectionCommand();
 
 			State = ConnectionState.WaitForServerGreet;
-			Socket = Context.CreateTcpSocket(IPAddress.AddressFamily);
-			Socket.Connect(IPEndPoint, delegate {
-				Stream = Socket.GetSocketStream();
-				Stream.Read(delegate (ByteBuffer buffer) {
-					buffers.Add(buffer);
+			Tcp.Connect(IPEndPoint, (e, tcp) => {
+				Socket = tcp;
+				tcp.Read((buffer) => {
+					buffers.Add(new ByteBuffer(buffer));
+
 					byte[] packet;
 					byte packetNumber;
-
 					switch (State) {
 					case ConnectionState.ParsePackets:
 						if (!HandleWorker()) {
@@ -126,22 +124,16 @@ namespace Manos.MySql
 						}
 						break;
 					}
-				}, delegate (Exception exception) {
-				}, delegate {
-
 				});
-			}, delegate (Exception exception) {
-
+				tcp.Resume();
 			});
-
 			return ConnectionCommand;
 		}
 
 		public void Disconnect()
 		{
-			if (Socket.IsConnected) {
+			if (Socket.Active && !Socket.Closed) {
 				Socket.Close();
-				Socket.Dispose();
 			}
 		}
 
@@ -165,7 +157,7 @@ namespace Manos.MySql
 				};
 
 				packetBuilder.NewPacket();
-				Stream.Write(response.Serialize(packetBuilder));
+				Socket.Write(response.Serialize(packetBuilder));
 				State = ConnectionState.WaitForLoginResponse;
 				break;
 			case ConnectionState.WaitForLoginResponse:
@@ -271,7 +263,7 @@ namespace Manos.MySql
 		{
 			commands.Dequeue();
 			if (commands.Count > 0) {
-				Stream.Write(commands.Peek().Packet);
+				Socket.Write(commands.Peek().Packet);
 			}
 		}
 
@@ -282,7 +274,7 @@ namespace Manos.MySql
 			}
 
 			if (State == ConnectionState.ParsePackets) {
-				Stream.Write(commands.Peek().Packet);
+				Socket.Write(commands.Peek().Packet);
 				return true;
 			} else {
 				return false;
@@ -299,7 +291,7 @@ namespace Manos.MySql
 
 			if (commands.Count == 1) {
 				if (State == ConnectionState.ParsePackets) {
-					Stream.Write(info.Packet);
+					Socket.Write(info.Packet);
 				}
 				return true;
 			}

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 
-namespace Manos.MySql
+namespace LibuvSharp.MySql
 {
 	public class Row : DynamicObject 
 	{

@@ -7,9 +7,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{2822BBF7-8D7E-4A2B-9487-A53CA80A44DA}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Manos.MySql</RootNamespace>
+    <RootNamespace>LibuvSharp.MySql</RootNamespace>
     <AssemblyName>Manos.MySql</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -32,11 +31,10 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Manos.IO, Version=0.1.3.0, Culture=neutral, PublicKeyToken=null">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\libs\Manos.IO.dll</HintPath>
+    <Reference Include="LibuvSharp">
+      <HintPath>..\LibuvSharp.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
@@ -51,6 +49,7 @@
     <Compile Include="MySqlClient.cs" />
     <Compile Include="Commands\ConnectionCommand.cs" />
     <Compile Include="Commands\QueryCommand.cs" />
+    <Compile Include="ByteBuffer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

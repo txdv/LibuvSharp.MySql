@@ -3,7 +3,7 @@ using System.Text;
 using System.Security.Cryptography;
 using System.Linq;
 
-namespace Manos.MySql
+namespace LibuvSharp.MySql
 {
 	public class MySqlConnectionPacket
 	{

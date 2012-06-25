@@ -1,5 +1,6 @@
 using System;
-namespace Manos.MySql
+
+namespace LibuvSharp.MySql
 {
 	public class QueryCommand
 	{

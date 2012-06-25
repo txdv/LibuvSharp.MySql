@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace Manos.MySql
+namespace LibuvSharp.MySql
 {
 	public class PacketReader
 	{

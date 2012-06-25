@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using LibuvSharp;
 
-using Manos.IO;
-
-namespace Manos.MySql
+namespace LibuvSharp.MySql
 {
-	public class ByteBuffers
+	class ByteBuffers
 	{
 		List<ByteBuffer> buffers = new List<ByteBuffer>();
 		
