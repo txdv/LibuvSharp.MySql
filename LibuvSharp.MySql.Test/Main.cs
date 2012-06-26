@@ -28,6 +28,11 @@ namespace LibuvSharp.MySql.Test
 				}).On(end: () => {
 					client.Disconnect();
 					Console.WriteLine("End of data");
+				}).OnResponse((packet) => {
+					if (packet.GetType() == typeof(Error)) {
+						Console.WriteLine("Error: {0}", (packet as Error).Message);
+						client.Disconnect();
+					}
 				});
 		}
 		
@@ -49,6 +54,7 @@ namespace LibuvSharp.MySql.Test
 			client.Connect()
 				.OnError((error) => {
 					Console.WriteLine(error.Message);
+					client.Disconnect();
 				});
 
 			client.Query(string.Format("use {0}", args[0]));
