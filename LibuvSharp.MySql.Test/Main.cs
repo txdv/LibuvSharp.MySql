@@ -27,7 +27,6 @@ namespace LibuvSharp.MySql.Test
 					Console.WriteLine();
 				}).On(end: () => {
 					client.Disconnect();
-					Console.WriteLine("End of data");
 				}).On(error: (error) => {
 					Console.WriteLine("Error: {0}", error.Message);
 					client.Disconnect();
