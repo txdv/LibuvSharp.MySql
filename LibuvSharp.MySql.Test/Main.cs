@@ -19,6 +19,12 @@ namespace LibuvSharp.MySql.Test
 		public static void Query(MySqlClient client, string database, string table)
 		{
 			client.Query(string.Format("SELECT * FROM {0}", table))
+				.On(fields: (fields) => {
+					foreach (var field in fields) {
+						Console.Write("{0}({1})\t", field.Type, field.Length);
+					}
+					Console.WriteLine();
+				})
 				.On(row: (data) => {
 					for (int i = 0; i < data.Length; i++) {
 						Console.Write(data.GetRawValue(i));

@@ -97,7 +97,7 @@ namespace LibuvSharp.MySql
 		}
 	}
 	
-    internal enum ColumnFlags : short
+    public enum ColumnFlags : short
     {
         NOT_NULL = 1,
         PRIMARY_KEY = 2,
@@ -114,26 +114,26 @@ namespace LibuvSharp.MySql
         //NUMBER = 32768
     };
 	
-	class FieldPacket
+	public class FieldPacket
 	{
-		public string Catalog       { get; set; }
-		public string Database      { get; set; }
-		public string Table         { get; set; }
-		public string OriginalTable { get; set; }
-		public string Name          { get; set; }
-		public string OriginalName  { get; set; }
+		public string Catalog       { get; private set; }
+		public string Database      { get; private set; }
+		public string Table         { get; private set; }
+		public string OriginalTable { get; private set; }
+		public string Name          { get; private set; }
+		public string OriginalName  { get; private set; }
 		
 		byte Filler { get; set; }
 		
-		public short CharsetNumber { get; set; }
-		public int   Length        { get; set; }
-		public MySqlDbType Type    { get; set; }
-		public ColumnFlags Flags   { get; set; }
-		public byte  Decimals      { get; set; }
+		public short CharsetNumber { get; private set; }
+		public int   Length        { get; private set; }
+		public MySqlDbType Type    { get; private set; }
+		public ColumnFlags Flags   { get; private set; }
+		public byte  Decimals      { get; private set; }
 		
 		byte[] Filler2 { get; set; }
 		
-		public byte[] Default { get; set; }
+		public byte[] Default { get; private set; }
 		
 		public static FieldPacket Parse(PacketReader packetReader)
 		{

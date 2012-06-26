@@ -50,6 +50,13 @@ namespace LibuvSharp.MySql
 			}
 		}
 
+		internal void FireFields(FieldPacket[] fields)
+		{
+			if (FieldsEvent != null) {
+				FieldsEvent(fields);
+			}
+		}
+
 		public QueryCommand OnResponse(Action<ResponsePacket> response)
 		{
 			if (response != null) {
@@ -98,7 +105,15 @@ namespace LibuvSharp.MySql
 			return this;
 		}
 
-		public QueryCommand On(Action<ResponsePacket> response = null, Action<Row> row = null, Action<dynamic> drow = null, Action end = null, Action<Exception> exception = null, Action<Error> error = null)
+		public QueryCommand OnFields(Action<FieldPacket[]> fields)
+		{
+			if (fields != null) {
+				FieldsEvent += fields;
+			}
+			return this;
+		}
+
+		public QueryCommand On(Action<ResponsePacket> response = null, Action<Row> row = null, Action<dynamic> drow = null, Action end = null, Action<Exception> exception = null, Action<Error> error = null, Action<FieldPacket[]> fields = null)
 		{
 			OnResponse(response);
 			OnDynamicRow(drow);
@@ -106,6 +121,7 @@ namespace LibuvSharp.MySql
 			OnEnd(end);
 			OnException(exception);
 			OnError(error);
+			OnFields(fields);
 
 			return this;
 		}
@@ -127,6 +143,7 @@ namespace LibuvSharp.MySql
 		public event Action EndEvent;
 		public event Action<Exception> ExceptionEvent;
 		public event Action<Error> ErrorEvent;
+		public event Action<FieldPacket[]> FieldsEvent;
 	}
 }
 

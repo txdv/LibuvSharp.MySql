@@ -59,7 +59,7 @@ namespace LibuvSharp.MySql
         FETCH = 28
     }
 	
-    enum MySqlDbType : byte
+    public enum MySqlDbType : byte
     {
         /// <summary>
         /// <see cref="Decimal"/>

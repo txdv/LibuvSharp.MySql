@@ -215,9 +215,12 @@ namespace LibuvSharp.MySql
 				yield return false;
 			}
 
+			queryCommand.FireFields(f.FieldPackets);
+
 			packetReader.NewPacket(data);
 			// TODO: check if the packet is in place
 			EOFPacket.Parse(packetReader);
+
 
 			while (true) {
 				while (!ReadPacket(out num, out data)) {
