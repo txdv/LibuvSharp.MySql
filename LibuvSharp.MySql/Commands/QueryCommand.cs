@@ -13,6 +13,9 @@ namespace LibuvSharp.MySql
 			if (ResponseEvent != null) {
 				ResponseEvent(response);
 			}
+			if (response is Error) {
+				FireError(response as Error);
+			}
 		}
 
 		internal void FireRow(Row row)
@@ -33,10 +36,17 @@ namespace LibuvSharp.MySql
 			}
 		}
 
-		internal void FireError(Exception exception)
+		internal void FireException(Exception exception)
+		{
+			if (ExceptionEvent != null) {
+				ExceptionEvent(exception);
+			}
+		}
+
+		internal void FireError(Error error)
 		{
 			if (ErrorEvent != null) {
-				ErrorEvent(exception);
+				ErrorEvent(error);
 			}
 		}
 
@@ -72,7 +82,15 @@ namespace LibuvSharp.MySql
 			return this;
 		}
 
-		public QueryCommand OnError(Action<Exception> error)
+		public QueryCommand OnException(Action<Exception> exception)
+		{
+			if (exception != null) {
+				ExceptionEvent += exception;
+			}
+			return this;
+		}
+
+		public QueryCommand OnError(Action<Error> error)
 		{
 			if (error != null) {
 				ErrorEvent += error;
@@ -80,12 +98,13 @@ namespace LibuvSharp.MySql
 			return this;
 		}
 
-		public QueryCommand On(Action<ResponsePacket> response = null, Action<Row> row = null, Action<dynamic> drow = null, Action end = null, Action<Exception> error = null)
+		public QueryCommand On(Action<ResponsePacket> response = null, Action<Row> row = null, Action<dynamic> drow = null, Action end = null, Action<Exception> exception = null, Action<Error> error = null)
 		{
 			OnResponse(response);
 			OnDynamicRow(drow);
 			OnRow(row);
 			OnEnd(end);
+			OnException(exception);
 			OnError(error);
 
 			return this;
@@ -97,7 +116,7 @@ namespace LibuvSharp.MySql
 			RowEvent = null;
 			DynamicRowEvent = null;
 			EndEvent = null;
-			ErrorEvent = null;
+			ExceptionEvent = null;
 
 			return this;
 		}
@@ -106,7 +125,8 @@ namespace LibuvSharp.MySql
 		public event Action<Row> RowEvent;
 		public event Action<dynamic> DynamicRowEvent;
 		public event Action EndEvent;
-		public event Action<Exception> ErrorEvent;
+		public event Action<Exception> ExceptionEvent;
+		public event Action<Error> ErrorEvent;
 	}
 }
 
