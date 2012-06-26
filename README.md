@@ -1,7 +1,7 @@
 LibuvSharp.MySql
 ================
 
-This is a mysql client [LibuvSharp](https://github.com/joyent/LibuvSharp/).
+This is a mysql client for [LibuvSharp](https://github.com/txdv/LibuvSharp/).
 
 License
 =======
